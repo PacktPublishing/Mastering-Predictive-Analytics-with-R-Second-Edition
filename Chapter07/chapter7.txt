@@ -1,0 +1,119 @@
+compute_SSE_split <- function(v, y, split_point) {
+  index <- v < split_point
+  y1 <- y[index]
+  y2 <- y[!index]
+  SSE <- sum((y1 - mean(y1)) ^ 2) + sum((y2 - mean(y2)) ^ 2)
+  return(SSE)
+}
+
+compute_all_SSE_splits <- function(v, y) {
+  sapply(unique(v), function(sp) compute_SSE_split(v, y, sp))
+}
+
+
+set.seed(99)
+x1 <- rbinom(20, 1, 0.5)
+set.seed(100)
+x2 <- round(10 + rnorm(20, 5, 5), 2)
+set.seed(101)
+y <- round((1 + (x2 * 2 / 5) + x1 - rnorm(20, 0, 3)), 2)
+rcart_df <- data.frame(x1, x2, y)
+rcart_df
+
+
+gini_index <- function(v) {
+  t <- table(v)
+  probs <- t / sum(t)
+  terms <- sapply(probs, function(p) p * (1 - p) )
+  return(sum(terms))
+}
+
+gini_index(v = c(0, 0, 0, 1, 1, 1))
+ 
+gini_index(v = c(0, 0, 0, 1, 1, 1, 1, 1, 1))
+ 
+gini_index(v = c(0, 0, 0, 1, 1, 1, 2, 2, 2))
+ 
+gini_index(v = c(1, 1, 1, 1, 1, 1))
+ 
+
+head(mcdf, n = 5)
+library(tree)
+d2tree <- tree(class ~ ., data = mcdf)
+summary(d2tree)
+plot(d2tree)
+text(d2tree, all = T)
+library(caret)
+set.seed(266)
+bnote_sampling_vector <- createDataPartition(bnote$class, p = 
+                           0.80, list = FALSE)
+bnote_train <- bnote[bnote_sampling_vector,]
+bnote_test <- bnote[-bnote_sampling_vector,]
+
+
+bnote_tree <- C5.0(class ~ ., data = bnote_train)
+summary(bnote_tree)
+
+bnote_predictions <- predict(bnote_tree, bnote_test)
+mean(bnote_test$class == bnote_predictions)
+skillcraft <- read.csv("SkillCraft1_Dataset.csv")
+skillcraft <- skillcraft[-1]
+skillcraft$TotalHours <- as.numeric(
+  levels(skillcraft$TotalHours))[skillcraft$TotalHours]
+
+skillcraft$HoursPerWeek <- as.numeric(
+  levels(skillcraft$HoursPerWeek))[skillcraft$HoursPerWeek]
+
+skillcraft$Age <- as.numeric(
+  levels(skillcraft$Age))[skillcraft$Age]
+
+skillcraft <- skillcraft[complete.cases(skillcraft),]
+library(caret)
+set.seed(133)
+skillcraft_sampling_vector <- createDataPartition( 
+  skillcraft$LeagueIndex, p = 0.80, list = FALSE)
+skillcraft_train <- skillcraft[skillcraft_sampling_vector,]
+skillcraft_test <- skillcraft[-skillcraft_sampling_vector,]
+
+library(rpart)
+regtree <- rpart(LeagueIndex ~ ., data = skillcraft_train)
+
+plot(regtree, uniform = TRUE)
+text(regtree, use.n = FALSE, all = TRUE, cex = .8)
+
+ compute_SSE <- function(correct, predictions) {
+     return(sum((correct - predictions) ^ 2))
+ }
+ 
+regtree_predictions <- predict(regtree, skillcraft_test)
+(regtree_SSE <- compute_SSE(regtree_predictions, 
+   skillcraft_test$LeagueIndex))
+regtree.random <- rpart(LeagueIndex ~ ., data = skillcraft_train, 
+  control = rpart.control(minsplit = 20, cp = 0.001, maxdepth = 10))
+regtree.random_predictions <- predict(regtree.random, 
+  skillcraft_test)
+(regtree.random_SSE <- compute_SSE(regtree.random_predictions, 
+   skillcraft_test$LeagueIndex))
+ 
+library(e1071)
+rpart.ranges <- list(minsplit = seq(5, 50, by = 5), cp = c(0,  
+  0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2,0.5), maxdepth = 
+  1:10)
+(regtree.tune <- tune(rpart,LeagueIndex ~ ., 
+   data = skillcraft_train, ranges = rpart.ranges))
+
+regtree.tuned <- rpart(LeagueIndex ~ ., data = skillcraft_train,  
+  control = rpart.control(minsplit = 35, cp = 0.002, maxdepth = 6))
+regtree.tuned_predictions <- predict(regtree.tuned, 
+  skillcraft_test)
+(regtree.tuned_SSE <- compute_SSE(regtree.tuned_predictions, 
+   skillcraft_test$LeagueIndex))
+ 
+
+library("RWeka")
+m5tree <- M5P(LeagueIndex ~ ., data = skillcraft_train)
+m5tree_predictions <- predict(m5tree, skillcraft_test)
+m5tree_SSE <- compute_SSE(m5tree_predictions, 
+                            skillcraft_test$LeagueIndex)
+m5tree_SSE
+ 

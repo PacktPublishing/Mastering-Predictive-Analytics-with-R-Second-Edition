@@ -1,0 +1,133 @@
+oliver<- c(1,1,2,5,7,8,9,7)
+thibault<- c(5,9,4,1,1,7,5,9)
+maria<- c(1,4,2,5,8,6,2,8)
+pedro<- c(2,6,7,2,6,1,8,9)
+ines<- c(1,3,2,4,8,9,7,7)
+gertrude<- c(1,6,5,7,3,2,5,5)
+ratingMatrix<- rbind(oliver, thibault, maria, pedro, ines,  
+gertrude)
+colnames(ratingMatrix) <- c("Berny's", "La Traviata", "El Pollo
+  Loco", "Joey's Pizza", "The Old West", "Jake and Jill", "Full 
+  Moon", "Acropolis")
+ratingMatrix
+
+dist(ratingMatrix, method = 'euclidean')
+
+dist(t(ratingMatrix), method = 'euclidean')
+
+ library("proxy")
+dist(ratingMatrix, method = 'cosine')
+
+binaryRatingMatrix<- ratingMatrix 5
+dist(binaryRatingMatrix, method = 'jaccard')
+centered_rm<- t(apply(ratingMatrix, 1, function(x) x - mean(x)))
+centered_rm
+ options(digits = 2)
+ (rm_svd<- svd(ratingMatrix))
+reconstructed_rm<- rm_svd$u %*% diag(rm_svd$d) %*% t(rm_svd$v)
+reconstructed_rm
+
+all.equal(ratingMatrix, reconstructed_rm, tolerance = 0.000001,
+check.attributes = F)
+
+ energy <- rm_svd$d ^ 2
+cumsum(energy) / sum(energy)
+d92<- c(rm_svd$d[1:2], rep(0, length(rm_svd$d) - 2))
+reconstructed92_rm<- rm_svd$u %*% diag(d92) %*% t(rm_svd$v)
+reconstructed92_rm
+ library(data.table)
+ jester <- fread("jesterfinal151cols.csv", sep = ",", header = F)
+ jester[, V1 := NULL]
+
+jester_m<- as.matrix(jester) 
+jester_m<- ifelse(jester_m == 99, NA, jester_m)
+ library(recommenderlab)
+jester_rrm<- as(jester_m, "realRatingMatrix")
+
+ movies <- fread("ratings.dat", sep = ":", header = F)
+ movies[, c("V2", "V4", "V6", "V7") := NULL]
+ head(movies)
+userid_factor<- as.factor(movies[, V1])
+movieid_factor<- as.factor(movies[, V3])
+movies_sm<- sparseMatrix(i = as.numeric(userid_factor), j = 
+as.numeric(movieid_factor), x = as.numeric(movies[,V5]))
+movies_rrm<- new("realRatingMatrix", data = movies_sm)
+colnames(movies_rrm) <- levels(movieid_factor)
+rownames(movies_rrm) <- levels(userid_factor)
+ dim(movies_rrm)
+jester_ratings<- getRatings(jester_rrm)
+jester_normalized_ratings<- getRatings(normalize(jester_rrm, 
+                                          method = "Z-score"))
+jester_items_rated_per_user<- rowCounts(jester_rrm)
+jester_average_item_rating_per_item<- colMeans(jester_rrm)
+ (jester_avg_items_rated_per_user<- mean(rowCounts(jester_rrm)))
+ 
+ (jester_avg_item_rating<- mean(colMeans(jester_rrm), na.rm = T))
+ 
+ (movies_avg_items_rated_per_user<- mean(rowCounts(movies_rrm)))
+ 
+ (movies_avg_item_rating<- mean(colMeans(movies_rrm)))
+jester_bn<- binarize(jester_rrm, minRating = 5)
+jester_bn<- jester_bn[rowCounts(jester_bn)  1]
+ dim(jester_bn)
+ 
+ 	 algorithms <- list(
+"Random" = list(name = "RANDOM", param = NULL),
+"Popular" = list(name = "POPULAR", param = NULL),
+"UserBasedCF_COS" = list(name = "UBCF", 
+param = list(method = "Cosine", nn = 50)),
+"UserBasedCF_JAC" = list(name = "UBCF", 
+param = list(method = "Jaccard", nn = 50))
+ )
+
+jester_split_scheme<- evaluationScheme(jester_bn, method = 
+"split", train = 0.8, given = 10, k = 1)
+
+jester_split_eval<- evaluate(jester_split_scheme, algorithms, 
+                                n = 1 : 20)
+ options(digits = 4)
+getConfusionMatrix(jester_split_eval[[4]])
+ plot(jester_split_eval, annotate = 2, legend = "topright")
+ title(main = "TPR vs FPR For Binary Jester Data")
+ plot(jester_split_eval, "prec/rec", annotate = 2, 
+       legend = "bottomright")
+ title(main = "Precision versus Recall Binary Jester Data")
+normalized_algorithms<- list(
+"Random" = list(name = "RANDOM", param = list(normalize =  
+"Z-score")),
+"Popular" = list(name = "POPULAR", param = list(normalize = 
+"Z-score")),
+"UserBasedCF" = list(name = "UBCF", param = list(normalize = 
+"Z-score", method = "Cosine", nn = 50)),
+"ItemBasedCF" = list(name = "IBCF", param = list(normalize = 
+"Z-score")),
+"SVD" = list(name = "SVD", param = list(categories = 30, 
+                      normalize = "Z-score", treat_na = "median"))
+ )
+movies_cross_scheme<- evaluationScheme(movies_rrm, method = 
+"cross-validation", k = 10, given = 10, goodRating = 4)
+movies_cross_eval<- evaluate(movies_cross_scheme, 
+normalized_algorithms, n = 1 : 20)
+ plot(movies_cross_eval, annotate = 4, legend = "topright")
+ title(main = "TPR versus FPR For Movielens Data")
+ plot(movies_split_eval, "prec/rec", annotate = 3, 
+       legend = "bottomright")
+ title(main = "Precision versus Recall For Movielens Data")
+jester_split_scheme<- evaluationScheme(jester_rrm, method = 
+"split", train = 0.8, given = 5, goodRating = 5)
+jester_ubcf_srec<- Recommender(getData(jester_split_scheme, 
+"train"), "UBCF")
+jester_ibcf_srec<- Recommender(getData(jester_split_scheme, 
+"train"), "IBCF")
+jester_ubcf_known<- predict(jester_ubcf_srec, 
+getData(jester_split_scheme, "known"), type="ratings")
+jester_ibcf_known<- predict(jester_ibcf_srec, 
+getData(jester_split_scheme, "known"), type="ratings") 
+ (jester_ubcf_acc<- calcPredictionAccuracy(jester_ubcf_known, 
+getData(jester_split_scheme, "unknown")))
+RMSEMSE      MAE 
+ 4.70765 22.16197  3.54130 
+ (jester_ibcf_acc<- calcPredictionAccuracy(jester_ibcf_known, 
+getData(jester_split_scheme, "unknown")))
+RMSEMSE       MAE 
+ 5.012211 25.122256  3.518815

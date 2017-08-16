@@ -1,0 +1,220 @@
+set.seed(5427395)
+nObs = 100
+x1minrange = 5
+x1maxrange = 25
+x1 = runif(nObs, x1minrange, x1maxrange)
+e = rnorm(nObs, mean = 0, sd = 2.0)
+y = 1.67 * x1 - 2.93 + e
+df = data.frame(y, x1)
+
+# ---
+myfit <- lm(y~x1, df)
+myfit
+
+machine <- read.csv("machine.data", header = F)
+names(machine) <- c("VENDOR", "MODEL", "MYCT", "MMIN", 
+  "MMAX", "CACH", "CHMIN", "CHMAX", "PRP", "ERP")
+machine <- machine[, 3:9]
+head(machine, n = 3)
+
+library(caret)
+set.seed(4352345)
+machine_sampling_vector <- createDataPartition(machine$PRP, 
+    p = 0.85, list = FALSE)
+machine_train <- machine[machine_sampling_vector,]
+machine_train_features <- machine[, 1:6]
+machine_train_labels <- machine$PRP[machine_sampling_vector]
+machine_test <- machine[-machine_sampling_vector,]
+machine_test_labels <- machine$PRP[-machine_sampling_vector]
+
+machine_correlations <- cor(machine_train_features)
+findCorrelation(machine_correlations)
+integer(0)
+findCorrelation(machine_correlations, cutoff = 0.75)
+ 
+cor(machine_train$MMIN, machine_train$MMAX)
+ 
+
+# ---
+library(caret)
+data(cars)
+cars_cor <- cor(cars_train_features)
+findCorrelation(cars_cor)
+integer(0)
+findCorrelation(cars_cor, cutoff = 0.75)
+ 
+cor(cars$Doors,cars$coupe)
+ 
+table(cars$coupe,cars$Doors)
+
+findLinearCombos(cars)
+
+cars <- cars[,c(-15, -18)]
+set.seed(232455)
+cars_sampling_vector <- createDataPartition(cars$Price, p = 
+  0.85, list = FALSE)
+cars_train <- cars[cars_sampling_vector,]
+cars_train_features <- cars[,-1]
+cars_train_labels <- cars$Price[cars_sampling_vector]
+cars_test <- cars[-cars_sampling_vector,]
+cars_test_labels <- cars$Price[-cars_sampling_vector]
+
+machine_model1 <- lm(PRP ~ ., data = machine_train)
+cars_model1 <- lm(Price ~ ., data = cars_train)
+summary(machine_model1)
+
+
+alias(cars_model1)
+
+cars_model2 <- lm(Price ~. -Saturn, data = cars_train)
+summary(cars_model2)
+
+summary(cars_model2$residuals)
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+-9325.0 -1607.0   150.5     0.0  1445.0 13460.0 
+mean(cars_train$Price)
+
+par(mfrow = c(2, 1))
+machine_residuals <- machine_model1$residuals
+qqnorm(machine_residuals, main = "Normal Q-Q Plot for CPU 
+  data set")
+qqline(machine_residuals)
+cars_residuals <- cars_model2$residuals
+qqnorm(cars_residuals, main = "Normal Q-Q Plot for Cars 
+  \data set")
+qqline(cars_residuals)
+
+(q <- 5.210e-02 / 1.885e-02)
+pt(q, df = 172, lower.tail = F) * 2
+machine_model_null <- lm(PRP ~ 1, data = machine_train)
+anova(machine_model_null, machine_model1)
+
+
+n_machine <- nrow(machine_train)
+k_machine <- length(machine_model1$coefficients) - 1
+sqrt(sum(machine_model1$residuals ^ 2) / (n_machine - k_machine - 1))
+ 
+
+n_cars <- nrow(cars_train)
+k_cars <- length(cars_model2$coefficients) - 1
+sqrt(sum(cars_model2$residuals ^ 2) / (n_cars - k_cars - 1))
+
+mean(machine_train$PRP)
+ 
+mean(cars_train$Price)
+ 
+
+compute_rsquared <- function(x, y) {
+     rss <- sum((x - y) ^ 2)
+     tss <- sum((y - mean(y)) ^ 2)
+     return(1 - (rss / tss))
+ }
+ 
+compute_rsquared(machine_model1$fitted.values, machine_train$PRP)
+ 
+compute_rsquared(cars_model2$fitted.values, cars_train$Price)
+ 
+
+
+compute_adjusted_rsquared <- function(x, y, k) {
+     n <- length(y)
+     r2 <- compute_rsquared(x, y)
+     return(1 - ((1 - r2) * (n - 1) / (n - k - 1)))
+ }
+
+compute_adjusted_rsquared(machine_model1$fitted.values, 
+                            machine_train$PRP, k_machine)
+ 
+compute_adjusted_rsquared(cars_model2$fitted.values, 
+                            cars_train$Price, k_cars)
+ 
+
+machine_model1_predictions <- predict(machine_model1, 
+                                        machine_test)
+cars_model2_predictions <- predict(cars_model2, cars_test)
+# --- Next, we''ll define our own function for computing the MSE:
+compute_mse <- function(predictions, actual) { 
+     mean( (predictions - actual) ^ 2 ) 
+}
+compute_mse(machine_model1$fitted.values, machine_train$PRP)
+ 
+compute_mse(machine_model1_predictions, machine_test$PRP)
+ 
+
+compute_mse(cars_model2$fitted.values, cars_train$Price)
+ 
+compute_mse(cars_model2_predictions, cars_test$Price)
+ 
+
+library("car")
+vif(cars_model2)
+
+sedan_model <- lm(sedan ~ .-Price -Saturn, data = cars_train)
+sedan_r2 <- compute_rsquared(sedan_model$fitted.values, 
+  cars_train$sedan)
+1 / (1-sedan_r2)
+truncated model summary with only the final three lines:
+machine_model2 <- lm(PRP ~ ., data = machine_train[!(
+  rownames(machine_train)) %in% c(200),])
+summary(machine_model2)
+machine_model2_predictions <- predict(machine_model2, 
+                                        machine_test)
+compute_mse(machine_model2_predictions, machine_test$PRP)
+ 
+machine_model3 <- step(machine_model_null, scope = 
+  list(lower = machine_model_null, upper = machine_model1), 
+  direction = "forward")
+cars_model_null <- lm(Price ~ 1, data = cars_train)
+cars_model3 <- step(cars_model2, scope = list( 
+  lower=cars_model_null, upper=cars_model2), direction = "backward")
+The formula for the final linear regression model on the cars data set is:
+Call:
+lm(formula = Price ~ Mileage + Cylinder + Doors + Leather + Buick 
+  + Cadillac + Pontiac + Saab + convertible + hatchback + sedan,
+    data = cars_train)
+machine_model3_predictions <- predict(
+  machine_model3, machine_test)
+compute_mse(machine_model3_predictions, machine_test$PRP)
+ 
+
+cars_model3_predictions <- predict(cars_model3, cars_test)
+compute_mse(cars_model3_predictions, cars_test$Price)
+ 
+library(glmnet)
+cars_train_mat <- model.matrix(Price ~ .-Saturn, cars_train)[,-1]
+lambdas <- 10 ^ seq(8, -4, length = 250)
+cars_models_ridge <- 
+  glmnet(cars_train_mat, cars_train$Price, alpha = 0, lambda = lambdas)
+cars_models_lasso <- 
+  glmnet(cars_train_mat, cars_train$Price, alpha = 1, lambda = lambdas)
+
+
+cars_models_ridge$lambda[100] 
+coef(cars_models_ridge)[,100]
+
+layout(matrix(c(1, 2), 1, 2))
+plot(cars_models_ridge, xvar = "lambda", main = "Ridge 
+  Regression\n")
+plot(cars_models_lasso, xvar = "lambda", main = "Lasso\n")
+ridge.cv <- cv.glmnet(cars_train_mat, cars_train$Price, alpha = 0)
+lambda_ridge <- ridge.cv$lambda.min
+lambda_ridge
+ 
+
+lasso.cv <- cv.glmnet(cars_train_mat, cars_train$Price, alpha = 1)
+lambda_lasso <- lasso.cv$lambda.min
+lambda_lasso
+ 
+predict(cars_models_lasso, type = "coefficients", s = lambda_lasso)
+
+
+cars_test_mat <- model.matrix(Price ~ . -Saturn, cars_test)[,-1]
+cars_ridge_predictions <- predict(cars_models_ridge, s = 
+                            lambda_ridge, newx = cars_test_mat)
+compute_mse(cars_ridge_predictions, cars_test$Price)
+ 
+cars_lasso_predictions <- predict(cars_models_lasso, s = 
+                            lambda_lasso, newx = cars_test_mat)
+compute_mse(cars_lasso_predictions, cars_test$Price)
+ 
+

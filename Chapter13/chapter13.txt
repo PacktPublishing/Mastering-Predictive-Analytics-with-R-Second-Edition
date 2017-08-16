@@ -1,0 +1,23 @@
+x<-read.table(file="HCSurvey20170202.txt", sep=",", nrows=150)
+summary(x[9])
+summary(x[5])
+summary(x[79])
+
+HCDF = read.csv("C:/Worker/HCSurvey20170202.txt")
+for (name in levels(HCDF$state)){
+ if (HCDF[5]>HCDF[79]+5) {
+ tmp=subset(HCDF, state==name)
+ fn=paste('c:/Users/nileshs/Documents',gsub(' ','',name),sep='')
+ write.csv(tmp,fn,row.names=FALSE) }
+}
+
+x<-read.csv("c:/Worker/HCSurvery20170202.txt")
+mysample <- x[sample(1:nrow(x), 500, replace=FALSE), ]
+nrow(x)
+nrow(mysample)
+
+
+z<-aggregate(x, by=x["state"], FUN=mean, na.rm=TRUE)
+nrow(z)
+nrow(x)
+

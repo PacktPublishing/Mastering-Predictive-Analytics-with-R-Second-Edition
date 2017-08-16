@@ -1,0 +1,91 @@
+iris_features <- iris[1:4]
+dist_eucl <- function(x1, x2) sqrt(sum((x1 - x2) ^ 2))
+distances <- apply(iris_features, 1,
+                     function(x) dist_eucl(x, new_sample))
+distances_sorted <- sort(distances, index.return = T)
+str(distances_sorted)
+
+nn_5 <- iris[distances_sorted$ix[1:5],]
+nn_5
+
+# ---
+
+library("caret")
+iris_numeric <- iris[1:4]
+pp_unit <- preProcess(iris_numeric, method = c("range"))
+iris_numeric_unit <- predict(pp_unit, iris_numeric)
+pp_zscore <- preProcess(iris_numeric, method = c("center", 
+  "scale"))
+iris_numeric_zscore <- predict(pp_zscore, iris_numeric)
+pp_boxcox <- preProcess(iris_numeric, method = c("BoxCox"))
+iris_numeric_boxcox <- predict(pp_boxcox, iris_numeric)
+
+
+cor(iris_numeric)
+iris_cor <- cor(iris_numeric)
+findCorrelation(iris_cor)
+findCorrelation(iris_cor, cutoff = 0.99)
+integer(0)
+findCorrelation(iris_cor, cutoff = 0.80)
+
+
+new_iris <- iris_numeric
+new_iris$Cmb <- 6.7 * new_iris$Sepal.Length –
+                  0.9 * new_iris$Petal.Width
+set.seed(68)
+new_iris$Cmb.N <- new_iris$Cmb +   
+                    rnorm(nrow(new_iris), sd = 0.1)
+options(digits = 4)
+head(new_iris,n = 3)
+
+findLinearCombos(new_iris)
+$linearCombos
+$linearCombos[[1]]
+
+newer_iris <- iris_numeric
+newer_iris$ZV <- 6.5
+newer_iris$Yellow <- ifelse(rownames(newer_iris) == 1, T, F
+head(newer_iris, n = 3)
+
+nearZeroVar(newer_iris)
+nearZeroVar(newer_iris, saveMetrics = T)
+
+
+pp_pca <- preProcess(iris_numeric,  method = c("BoxCox", 
+  "center", "scale", "pca"), thresh = 0.95)
+iris_numeric_pca <- predict(pp_pca, iris_numeric)
+head(iris_numeric_pca, n = 3)
+
+options(digits = 2)
+pp_pca$rotation
+
+
+pp_pca_full <- preProcess(iris_numeric,  method = c("BoxCox", 
+  "center", "scale", "pca"), pcaComp = 4)
+iris_pca_full <- predict(pp_pca_full, iris_numeric)
+pp_pca_var <- apply(iris_pca_full, 2, var)
+iris_pca_var <- data.frame(Variance = 
+  round(100 * pp_pca_var / sum(pp_pca_var), 2), CumulativeVari-ance 
+  = round(100 * cumsum(pp_pca_var) / sum(pp_pca_var), 2))
+iris_pca_var
+
+set.seed(2412)
+iris_sampling_vector <- createDataPartition(iris$Species, p = 
+                          0.8, list = FALSE)
+
+iris_train     <- iris_numeric[iris_sampling_vector,]
+iris_train_z   <- iris_numeric_zscore[iris_sampling_vector,]
+iris_train_pca <- iris_numeric_pca[iris_sampling_vector,]
+iris_train_labels <- iris$Species[iris_sampling_vector]
+iris_test        <- iris_numeric[-iris_sampling_vector,]
+iris_test_z      <- iris_numeric_zscore[-iris_sampling_vector,]
+iris_test_pca    <- iris_numeric_pca[-iris_sampling_vector,]
+iris_test_labels <- iris$Species[-iris_sampling_vector]
+
+knn_model     <- knn3(iris_train, iris_train_labels, k = 5)
+knn_model_z   <- knn3(iris_train_z, iris_train_labels, k = 5)
+knn_model_pca <- knn3(iris_train_pca, iris_train_labels, k = 5)
+
+
+
+

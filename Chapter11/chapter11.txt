@@ -1,0 +1,195 @@
+bbc_folder<- "~/Downloads/bbc/"
+bbcsports_folder<- "~/Downloads/bbcsport/"
+
+bbc_source<- paste(bbc_folder, "bbc.mtx", sep = "")
+bbc_source_terms<- paste(bbc_folder, "bbc.terms", sep = "")
+bbc_source_docs<- paste(bbc_folder, "bbc.docs", sep = "")
+
+bbcsports_source<- paste(bbcsports_folder, "bbcsport.mtx", 
+sep = "")
+bbcsports_source_terms<- paste(bbcsports_folder, 
+"bbcsport.terms", sep = "")
+bbcsports_source_docs<- paste(bbcsports_folder, 
+"bbcsport.docs", sep = "")
+ library("tm")
+ library("Matrix")
+bbc_matrix<- readMM(bbc_source)
+bbc_tdm<- as.TermDocumentMatrix(bbc_matrix, weightTf)
+
+bbcsports_matrix<- readMM(bbcsports_source)
+bbcsports_tdm<- as.TermDocumentMatrix(bbcsports_matrix, 
+weightTf)
+bbc_rows<- scan(bbc_source_terms, what = "character")
+Read 9635 items
+bbc_cols<- scan(bbc_source_docs, what = "character")
+Read 2225 items
+bbc_tdm$dimnames$Terms<- bbc_rows
+bbc_tdm$dimnames$Docs<- bbc_cols
+ (bbc_dtm<- t(bbc_tdm))
+<<DocumentTermMatrix (documents: 2225, terms: 9635)
+Non-/sparse entries: 286774/21151101
+Sparsity           : 99%
+Maximal term length: 24
+Weighting          : term frequency (tf)
+bbcsports_rows<- scan(bbcsports_source_terms, what =  
+"character")
+Read 4613 items
+bbcsports_cols<- scan(bbcsports_source_docs, what =  
+"character")
+Read 737 items
+bbcsports_tdm$dimnames$Terms<- bbcsports_rows
+bbcsports_tdm$dimnames$Docs<- bbcsports_cols
+ (bbcsports_dtm<- t(bbcsports_tdm))
+bbc_cols[1:5]
+
+bbcsports_cols[1:5]
+bbc_gold_topics<- sapply(bbc_cols, 
+                           function(x) substr(x, 1, nchar(x) - 4))
+bbc_gold_factor<- factor(bbc_gold_topics)
+ summary(bbc_gold_factor)
+     business entertainment      politics         sport 
+          510           386           417           511 
+         tech 
+          401 
+
+bbcsports_gold_topics<- sapply(bbcsports_cols, 
+                           function(x) substr(x, 1, nchar(x) - 4))
+bbcsports_gold_factor<- factor(bbcsports_gold_topics)
+ summary(bbcsports_gold_factor)
+compute_model_list<- function (k, topic_seed, myDtm){
+LDA_VEM<- LDA(myDtm, k = k, control = list(seed = topic_seed))
+LDA_VEM_a<- LDA(myDtm, k = k, control = list(estimate.alpha = 
+                   FALSE, seed = topic_seed))
+LDA_GIB<- LDA(myDtm, k = k, method = "Gibbs", control = 
+                 list(seed = topic_seed, burnin = 1000, thin = 
+                 100, iter = 1000))
+CTM_VEM<- CTM(myDtm, k = k, control = list(seed = topic_seed, 
+var = list(tol = 10^-4), em = list(
+tol = 10^-3)))
+  return(list(LDA_VEM = LDA_VEM, LDA_VEM_a = LDA_VEM_a, 
+LDA_GIB = LDA_GIB, CTM_VEM = CTM_VEM))
+}
+ library("topicmodels")
+ k <- 5
+topic_seed<- 5798252
+bbc_models<- compute_model_list(k, topic_seed,bbc_dtm)
+bbcsports_models<- compute_model_list(k, topic_seed, 
+bbcsports_dtm)
+model_topics<- topics(bbc_models$LDA_VEM)
+ table(model_topics, bbc_gold_factor)
+model_topics<- topics(bbc_models$LDA_GIB)
+ table(model_topics, bbc_gold_factor)
+
+# -- The following function computes this value given a model and a vector of gold topics:
+compute_topic_model_accuracy<- function(model, gold_factor) {
+model_topics<- topics(model)
+model_table<- table(model_topics, gold_factor)
+model_matches<- apply(model_table, 1, max)
+model_accuracy<- sum(model_matches) / sum(model_table)
+  return(model_accuracy)
+}
+# --- Using this notion of accuracy, let''s see which model performs better in our two datasets:
+sapply(bbc_models, function(x) 
+compute_topic_model_accuracy(x, bbc_gold_factor))
+LDA_VEMLDA_VEM_aLDA_GIBCTM_VEM
+0.7959551 0.7923596 0.9487640 0.6148315 
+sapply(bbcsports_models, function(x) 
+compute_topic_model_accuracy(x, bbcsports_gold_factor))
+LDA_VEMLDA_VEM_aLDA_GIBCTM_VEM
+0.7924016 0.7788331 0.7856174 0.7503392
+
+sapply(bbc_models, logLik)
+LDA_VEMLDA_VEM_aLDA_GIBCTM_VEM
+ -3201542  -3274005  -3017399  -3245828
+sapply(bbcsports_models, logLik)
+LDA_VEMLDA_VEM_aLDA_GIBCTM_VEM
+-864357.7 -886561.9 -813889.7 -868561.9 
+
+seeded_bbc_models<- lapply(5798252 : 5798256, 
+              function(x) compute_model_list(k, x, bbc_dtm))
+seeded_bbcsports_models<- lapply(5798252 : 5798256, 
+              function(x) compute_model_list(k, x, 
+bbcsports_dtm))
+seeded_bbc_models_acc<- sapply(seeded_bbc_models, 
+  function(x) sapply(x, function(y) 
+compute_topic_model_accuracy(y, bbc_gold_factor)))
+seeded_bbc_models_acc
+seeded_bbcsports_models_acc<- sapply(seeded_bbcsports_models, 
+  function(x) sapply(x, function(y) 
+compute_topic_model_accuracy(y, bbcsports_gold_factor)))
+seeded_bbcsports_models_acc
+
+# -- Here is our new function:
+compute_model_list_r<- function (k, topic_seed, myDtm, nstart) {
+seed_range<- topic_seed : (topic_seed + nstart - 1)
+LDA_VEM<- LDA(myDtm, k = k, control = list(seed = seed_range, 
+nstart = nstart))
+LDA_VEM_a<- LDA(myDtm, k = k, control = list(estimate.alpha = 
+                 FALSE, seed = seed_range, nstart = nstart))
+LDA_GIB<- LDA(myDtm, k = k, method = "Gibbs", control = 
+                 list(seed = seed_range, burnin = 1000, thin = 
+                 100, iter = 1000, nstart = nstart))
+CTM_VEM<- CTM(myDtm, k = k, control = list(seed = seed_range, 
+var = list(tol = 10^-4), em = list(tol = 10^-3), 
+nstart = nstart))
+  return(list(LDA_VEM = LDA_VEM, LDA_VEM_a = LDA_VEM_a, 
+LDA_GIB = LDA_GIB, CTM_VEM = CTM_VEM))
+}
+
+nstart<- 5
+topic_seed<- 5798252
+nstarted_bbc_models_r<- 
+compute_model_list_r(k, topic_seed, bbc_dtm, nstart)
+nstarted_bbcsports_models_r<- 
+compute_model_list_r(k, topic_seed, bbcsports_dtm, 
+nstart)
+sapply(nstarted_bbc_models_r, function(x) 
+compute_topic_model_accuracy(x, bbc_gold_factor))
+LDA_VEMLDA_VEM_aLDA_GIBCTM_VEM
+0.7959551 0.7923596 0.9487640 0.9366292 
+sapply(nstarted_bbcsports_models_r, function(x) 
+compute_topic_model_accuracy(x, bbcsports_gold_factor))
+LDA_VEMLDA_VEM_aLDA_GIBCTM_VEM
+0.9050204 0.8426052 0.7991859 0.8995929
+
+bbc_models[[1]]@alpha
+bbc_models[[2]]@alpha
+bbcsports_models[[1]]@alpha
+bbcsports_models[[2]]@alpha
+
+ options(digits = 4)
+ head(posterior(bbc_models[[1]])$topics)
+compute_entropy<- function(probs) {
+  return(- sum(probs * log(probs)))
+}
+
+compute_model_mean_entropy<- function(model) {
+  topics <- posterior(model)$topics
+  return(mean(apply(topics, 1, compute_entropy)))
+}
+sapply(bbc_models, compute_model_mean_entropy)
+LDA_VEMLDA_VEM_aLDA_GIBCTM_VEM
+0.3119491 1.2664310 1.2720891 0.8373708 
+sapply(bbcsports_models, compute_model_mean_entropy)
+LDA_VEMLDA_VEM_aLDA_GIBCTM_VEM
+0.3058856 1.3084006 1.3421798 0.7545975
+GIB_bbc_model<- bbc_models[[3]]
+ terms(GIB_bbc_model, 10)
+plot_wordcloud<- function(model, myDtm, index, numTerms) {
+
+model_terms<- terms(model,numTerms)
+model_topics<- topics(model)
+
+terms_i<- model_terms[,index]
+topic_i<- model_topics == index
+dtm_i<- myDtm[topic_i, terms_i]
+frequencies_i<- colSums(as.matrix(dtm_i))
+wordcloud(terms_i, frequencies_i, min.freq = 0)
+}
+
+
+
+
+
+
+

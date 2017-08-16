@@ -1,0 +1,50 @@
+a<-69
+print(a)
+b<-as.character(a)
+print(b)
+
+
+difftime(as.Date(saledate), as.Date(returndate))
+
+# --- 
+
+participant<-c(1,2,3,4,5,6,7,8)
+recode<-c(Doctoral=1, Masters=2, Bachelors=3, Associ-ates=4, Nondegree=5, SomeCollege=6, HighSchool=7, None=8))
+(participant<-factor (participant, levels=recode, labels=names(recode)))
+
+knn_predictions_prob <- predict(knn_model, iris_test,
+  type = "prob")
+tail(knn_predictions_prob, n = 3)
+      setosa versicolor virginica
+
+knn_predictions <- predict(knn_model, iris_test, type = "class")
+knn_predictions_z <- predict(knn_model_z, iris_test_z, 
+                               type = "class")
+knn_predictions_pca <- predict(knn_model_pca, iris_test_pca,  
+                                 type = "class")
+postResample(knn_predictions, iris_test_labels)
+ Accuracy     Kappa 
+0.9333333 0.9000000 
+postResample(knn_predictions_z, iris_test_labels)
+ Accuracy     Kappa 
+0.9666667 0.9500000 
+postResample(knn_predictions_pca, iris_test_labels)
+
+table(knn_predictions, iris_test_labels) 
+               iris_test_labels
+
+table(actual,predicted)
+
+
+# -- 5 rounds of numeric test scores saved in a vector named “v”
+v <-c(74,79, 88, 90, 99)
+
+# -- create an image file for the visualization for later use
+png(file = "c:/simple example/learning curve.png", type = c("windows", "cairo", "cairo-png"))
+
+# -- plot the model scores round by round
+plot(v, type = "o", col = "red", xlab = "Round", ylab = "Score", main = "Learning Curve")
+
+# -- close output 
+dev.off()
+
