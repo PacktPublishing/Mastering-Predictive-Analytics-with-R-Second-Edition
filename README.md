@@ -1,7 +1,12 @@
 # Mastering Predictive Analytics with R - Second Edition
 This is the code repository for [Mastering Predictive Analytics with R - Second Edition](https://www.packtpub.com/big-data-and-business-intelligence/mastering-predictive-analytics-r-second-edition?utm_source=github&utm_medium=repository&utm_campaign=9781787121393), published by [Packt](https://www.packtpub.com/?utm_source=github). It contains all the supporting project files necessary to work through the book from start to finish.
 ## About the Book
-Go to Mapt
+R offers a free and open source environment that is perfect for both learning and deploying predictive modeling solutions. With its constantly growing community and plethora of packages, R offers the functionality to deal with a truly vast array of problems.
+
+The book begins with a dedicated chapter on the language of models and the predictive modeling process. You will understand the learning curve and the process of tidying data. Each subsequent chapter tackles a particular type of model, such as neural networks, and focuses on the three important questions of how the model works, how to use R to train it, and how to measure and assess its performance using real-world datasets. How do you train models that can handle really large datasets? This book will also show you just that. Finally, you will tackle the really important topic of deep learning by implementing applications on word embedding and recurrent neural networks.
+
+By the end of this book, you will have explored and tested the most popular modeling techniques in use on real- world datasets and mastered a diverse range of techniques in predictive analytics using R.
+
 ## Instructions and Navigation
 All of the code is organized into folders. Each folder starts with a number followed by the application name. For example, Chapter02.
 
