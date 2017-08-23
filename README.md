@@ -26,8 +26,8 @@ if ($route = $collection->get('mymodule.mypage)) {
 
 In order to work with and to run the code examples found in this book, the following should be noted:
 * Bullet list R is a free software environment for statistical computing and graphics. It compiles and runs on a wide variety of UNIX platforms, Windows, and MacOS. To download R, there are a variety of locations available, including https://www.rstudio.com/products/rstudio/download.
-• R includes extensive accommodations for accessing documentation and searching for help. A good source of information is at  http://www.rproject.org/help.html.
-• The capabilities of R are extended through user-created packages. Various packages are referred to and used throughout this book and the features of and access to each will be detailed as they are introduced. For example, the wordcloud package is introduced in Chapter 11, Topic Modeling to plot a cloud of words shared across documents. This is found at https://cran.rproject.org/web/packages/wordcloud/index.html.
+* Bullet list R includes extensive accommodations for accessing documentation and searching for help. A good source of information is at  http://www.rproject.org/help.html.
+* Bullet list The capabilities of R are extended through user-created packages. Various packages are referred to and used throughout this book and the features of and access to each will be detailed as they are introduced. For example, the wordcloud package is introduced in Chapter 11, Topic Modeling to plot a cloud of words shared across documents. This is found at https://cran.rproject.org/web/packages/wordcloud/index.html.
 
 ## Related Products
 * [Mastering Predictive Analytics with R](https://www.packtpub.com/application-development/mastering-predictive-analytics-r?utm_source=github&utm_medium=repository&utm_campaign=9781783982806)
