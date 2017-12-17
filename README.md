@@ -35,6 +35,3 @@ In order to work with and to run the code examples found in this book, the follo
 * [Mastering Predictive Analytics with Python](https://www.packtpub.com/big-data-and-business-intelligence/mastering-predictive-analytics-python?utm_source=github&utm_medium=repository&utm_campaign=9781785882715)
 
 * [Learning Predictive Analytics with R](https://www.packtpub.com/big-data-and-business-intelligence/learning-predictive-analytics-r?utm_source=github&utm_medium=repository&utm_campaign=9781782169352)
-
-### Suggestions and Feedback
-[Click here](https://docs.google.com/forms/d/e/1FAIpQLSe5qwunkGf6PUvzPirPDtuy1Du5Rlzew23UBp2S-P3wB-GcwQ/viewform) if you have any feedback or suggestions.
